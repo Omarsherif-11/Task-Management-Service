@@ -1,18 +1,30 @@
 "use client"
 
-import type React from "react"
 import { useState } from "react"
+import { useAuth } from "react-oidc-context"
+import { useRouter } from "next/navigation"
 import { MainNav } from "@/components/main-nav"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Loader2 } from "lucide-react"
-import { useAuth } from "react-oidc-context"
 
 export default function ProfilePage() {
-    const { user } = useAuth()
+    const auth = useAuth()
+    const router = useRouter()
+    const [success, setSuccess] = useState("")
+    const [error, setError] = useState("")
+
+    const handleSignOut = () => {
+        auth.removeUser()
+        auth.signoutRedirect()
+        router.push("/")
+    }
+
+    if (!auth.isAuthenticated) {
+        router.push("/")
+        return null
+    }
 
     return (
         <div className="flex min-h-screen flex-col">
@@ -29,10 +41,54 @@ export default function ProfilePage() {
                         <CardContent className="space-y-4">
                             <div className="space-y-2">
                                 <Label>Email</Label>
-                                <div className="p-2 border rounded-md bg-muted">{user?.profile.email}</div>
+                                <div className="p-2 border rounded-md bg-muted">{auth.user?.profile.email}</div>
                             </div>
+                            {/* <div className="space-y-2">
+                                <Label>Name</Label>
+                                <div className="p-2 border rounded-md bg-muted">{auth.user?.profile.name || "Not provided"}</div>
+                            </div> */}
                         </CardContent>
+                        <CardFooter>
+                            <Button variant="destructive" onClick={handleSignOut}>
+                                Sign Out
+                            </Button>
+                        </CardFooter>
                     </Card>
+
+                    {/* <Card>
+                        <CardHeader>
+                            <CardTitle>Account Settings</CardTitle>
+                            <CardDescription>Manage your account settings</CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            {error && (
+                                <Alert variant="destructive">
+                                    <AlertDescription>{error}</AlertDescription>
+                                </Alert>
+                            )}
+                            {success && (
+                                <Alert className="bg-green-50 text-green-800 border-green-200">
+                                    <AlertDescription>{success}</AlertDescription>
+                                </Alert>
+                            )}
+                            <p className="text-muted-foreground">
+                                To change your password or update your profile information, please visit the AWS Cognito user portal.
+                            </p>
+                        </CardContent>
+                        <CardFooter>
+                            <Button
+                                onClick={() =>
+                                    window.open(
+                                        `https://${process.env.NEXT_PUBLIC_DOMAIN}.auth.${process.env.NEXT_PUBLIC_AWS_REGION}.amazoncognito.com/forgotPassword?client_id=${process.env.NEXT_PUBLIC_COGNITO_CLIENT_ID}&response_type=code&redirect_uri=${process.env.NEXT_PUBLIC_REDIRECT_URI}`,
+                                        "_blank"
+                                    )
+                                }
+
+                            >
+                                Reset Password
+                            </Button>
+                        </CardFooter>
+                    </Card> */}
                 </div>
             </div>
         </div>

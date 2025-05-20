@@ -9,15 +9,12 @@ export default function CallbackPage() {
     const router = useRouter();
 
     useEffect(() => {
-        console.log("Callback page loaded");
-        console.log("Auth state:", auth);
 
         if (!auth.isLoading && auth.isAuthenticated) {
-            console.log("User authenticated, redirecting to dashboard");
             router.push('/dashboard');
         } else if (!auth.isLoading && auth.error) {
             console.error("Authentication error:", auth.error);
-            router.push('/login?error=' + encodeURIComponent(auth.error.message));
+            router.push('/');
         }
     }, [auth, router]);
 

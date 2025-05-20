@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useCallback } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -16,25 +16,26 @@ export function DashboardContent() {
     const [tasks, setTasks] = useState<Task[]>([])
     const [isLoading, setIsLoading] = useState(true)
 
-    const { user } = useAuth();
+    const { user } = useAuth()
+
+    const loadTasks = useCallback(async () => {
+        try {
+            if (user) {
+                setIsLoading(true)
+                const accessToken = user.access_token
+                const fetchedTasks = await fetchTasks(accessToken)
+                setTasks(fetchedTasks)
+            }
+        } catch (error) {
+            console.error("Error loading tasks:", error)
+        } finally {
+            setIsLoading(false)
+        }
+    }, [user])
 
     useEffect(() => {
-        const loadTasks = async () => {
-            try {
-                if (user) {
-                    const accessToken = user.access_token;
-                    const fetchedTasks = await fetchTasks(accessToken)
-                    setTasks(fetchedTasks)
-                }
-            } catch (error) {
-                console.error("Error loading tasks:", error)
-            } finally {
-                setIsLoading(false)
-            }
-        }
-
         loadTasks()
-    }, [user])
+    }, [loadTasks])
 
     const highPriorityTasks = tasks.filter((task) => task.priority === "high")
     const upcomingTasks = tasks
@@ -43,7 +44,12 @@ export function DashboardContent() {
             const today = new Date()
             const threeDaysFromNow = new Date()
             threeDaysFromNow.setDate(today.getDate() + 3)
-            return (dueDate >= today && dueDate <= threeDaysFromNow) || (dueDate.getDay() == today.getDay() && dueDate.getMonth() == today.getMonth() && dueDate.getFullYear() == today.getFullYear())
+            return (
+                (dueDate >= today && dueDate <= threeDaysFromNow) ||
+                (dueDate.getDay() == today.getDay() &&
+                    dueDate.getMonth() == today.getMonth() &&
+                    dueDate.getFullYear() == today.getFullYear())
+            )
         })
         .sort((a, b) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime())
 
@@ -82,7 +88,7 @@ export function DashboardContent() {
                                         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
                                     </div>
                                 ) : tasks.length > 0 ? (
-                                    <TaskList tasks={tasks.slice(0, 5)} />
+                                    <TaskList tasks={tasks.slice(0, 5)} onTasksChanged={loadTasks} />
                                 ) : (
                                     <p className="text-center py-8 text-muted-foreground">No tasks found. Create your first task!</p>
                                 )}
@@ -99,7 +105,7 @@ export function DashboardContent() {
                                         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
                                     </div>
                                 ) : upcomingTasks.length > 0 ? (
-                                    <TaskList tasks={upcomingTasks} />
+                                    <TaskList tasks={upcomingTasks} onTasksChanged={loadTasks} />
                                 ) : (
                                     <p className="text-center py-8 text-muted-foreground">No upcoming deadlines in the next 3 days.</p>
                                 )}
@@ -119,7 +125,7 @@ export function DashboardContent() {
                                     <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
                                 </div>
                             ) : highPriorityTasks.length > 0 ? (
-                                <TaskList tasks={highPriorityTasks} />
+                                <TaskList tasks={highPriorityTasks} onTasksChanged={loadTasks} />
                             ) : (
                                 <p className="text-center py-8 text-muted-foreground">No high priority tasks found.</p>
                             )}
@@ -138,7 +144,7 @@ export function DashboardContent() {
                                     <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
                                 </div>
                             ) : upcomingTasks.length > 0 ? (
-                                <TaskList tasks={upcomingTasks} />
+                                <TaskList tasks={upcomingTasks} onTasksChanged={loadTasks} />
                             ) : (
                                 <p className="text-center py-8 text-muted-foreground">No upcoming tasks in the next 3 days.</p>
                             )}

@@ -1,20 +1,23 @@
 "use client"
-
-import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { useAuth } from "react-oidc-context";
+import { useAuth } from "react-oidc-context"
 import { useRouter } from "next/navigation"
-import { useEffect } from "react"
 
 export function LandingPage() {
-    const auth = useAuth();
+    const auth = useAuth()
+    const router = useRouter()
 
-    const signOutRedirect = () => {
-        const clientId = process.env.COGNITO_CLIENT_ID;
-        const logoutUri = "localhost:3000/";
-        const cognitoDomain = process.env.DOMAIN;
-        window.location.href = `${cognitoDomain}/logout?client_id=${clientId}&logout_uri=${encodeURIComponent(logoutUri)}`;
-    };
+    const handleSignUp = () => {
+        auth.signinRedirect({ prompt: "login" })
+    }
+
+    const handleGetStarted = () => {
+        if (auth.isAuthenticated) {
+            router.push("/dashboard")
+        } else {
+            auth.signinRedirect()
+        }
+    }
 
     return (
         <div className="flex min-h-screen flex-col">
@@ -22,8 +25,10 @@ export function LandingPage() {
                 <div className="container mx-auto px-4 py-4 flex justify-between items-center">
                     <h1 className="text-2xl font-bold text-primary">Task Manager</h1>
                     <div className="space-x-4">
-                        <Button variant="outline" onClick={() => auth.signinRedirect()}>Log In</Button>
-                        <Button>Sign Up</Button>
+                        <Button variant="outline" onClick={() => auth.signinRedirect()}>
+                            Log In
+                        </Button>
+                        <Button onClick={handleSignUp}>Sign Up</Button>
                     </div>
                 </div>
             </header>
@@ -35,11 +40,9 @@ export function LandingPage() {
                             A powerful task management system built on AWS that helps you organize, prioritize, and track your tasks
                             with ease.
                         </p>
-                        <Link href="/signup">
-                            <Button size="lg" className="px-8">
-                                Get Started
-                            </Button>
-                        </Link>
+                        <Button size="lg" className="px-8" onClick={handleGetStarted}>
+                            Get Started
+                        </Button>
                     </div>
                 </section>
                 <section className="py-16 bg-muted">

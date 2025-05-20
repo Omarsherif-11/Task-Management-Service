@@ -1,90 +1,50 @@
 "use client"
 
-import type React from "react"
-
-import { useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
-import { MainNav } from "@/components/main-nav"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
-import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Loader2, ArrowLeft } from "lucide-react"
-import Link from "next/link"
-import { fetchTask, updateTask } from "@/lib/api"
-import type { Task, TaskFormData } from "@/types/task"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { useState, useEffect } from "react"
+import { useParams, useRouter } from "next/navigation"
 import { useAuth } from "react-oidc-context"
+import { MainNav } from "@/components/main-nav"
+import { TaskForm } from "@/components/task-form"
+import { fetchTask } from "@/lib/api"
+import { Loader2 } from "lucide-react"
+import type { Task } from "@/types/task"
 
-export default function EditTaskPage({ params }: { params: { id: string } }) {
-    const { isAuthenticated, user } = useAuth();
-    const accessToken = isAuthenticated ? user?.access_token : "" as any;
-    const [task, setTask] = useState<Task | null>(null)
-    const [formData, setFormData] = useState<TaskFormData>({
-        title: "",
-        status: "pending",
-        description: "",
-        priority: "medium",
-        due_date: new Date().toISOString().split("T")[0],
-        email: user?.profile.email || "",
-    })
-    const [error, setError] = useState("")
-    const [isLoading, setIsLoading] = useState(true)
-    const [isSaving, setIsSaving] = useState(false)
+export default function EditTaskPage() {
+    const params = useParams()
     const router = useRouter()
+    const { user, isLoading: authLoading } = useAuth()
+    const [task, setTask] = useState<Task | null>(null)
+    const [isLoading, setIsLoading] = useState(true)
+    const [error, setError] = useState("")
+    const taskId = params.id as string
 
     useEffect(() => {
+        if (!authLoading && !user) {
+            router.push("/")
+            return
+        }
+
         const loadTask = async () => {
             try {
-                const fetchedTask = await fetchTask(params.id, accessToken)
-                setTask(fetchedTask)
-                setFormData({
-                    title: fetchedTask.title,
-                    status: fetchedTask.status,
-                    description: fetchedTask.description,
-                    priority: fetchedTask.priority,
-                    due_date: new Date(fetchedTask.due_date).toISOString().split("T")[0],
-                    email: user?.profile.email || "",
-                })
-            } catch (error) {
-                console.error("Error loading task:", error)
-                setError("Failed to load task details")
+                if (user) {
+                    const accessToken = user.access_token
+                    const fetchedTask = await fetchTask(taskId, accessToken)
+                    setTask(fetchedTask)
+                }
+            } catch (err: any) {
+                console.error("Error loading task:", err)
+                setError(err.message || "Failed to load task")
             } finally {
                 setIsLoading(false)
             }
         }
 
-        loadTask()
-    }, [params.id])
-
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-        const { name, value } = e.target
-        setFormData((prev) => ({ ...prev, [name]: value }))
-    }
-
-    const handleSelectChange = (name: string, value: string) => {
-        setFormData((prev) => ({ ...prev, [name]: value }))
-    }
-
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault()
-        setError("")
-        setIsSaving(true)
-
-        try {
-            await updateTask(params.id, formData, accessToken)
-            router.push(`/tasks/${params.id}`)
-        } catch (err: any) {
-            console.error("Error updating task:", err)
-            setError(err.message || "Failed to update task")
-        } finally {
-            setIsSaving(false)
+        if (user) {
+            loadTask()
         }
-    }
+    }, [taskId, user, authLoading, router])
 
-    if (isLoading) {
+    if (authLoading || isLoading) {
         return (
             <div className="flex min-h-screen flex-col">
                 <MainNav />
@@ -95,22 +55,13 @@ export default function EditTaskPage({ params }: { params: { id: string } }) {
         )
     }
 
-    if (error && !task) {
+    if (error || !task) {
         return (
             <div className="flex min-h-screen flex-col">
                 <MainNav />
-                <div className="flex-1 p-4 md:p-8 pt-6">
-                    <Alert variant="destructive">
-                        <AlertDescription>{error}</AlertDescription>
-                    </Alert>
-                    <div className="mt-4">
-                        <Link href="/tasks">
-                            <Button>
-                                <ArrowLeft className="mr-2 h-4 w-4" />
-                                Back to Tasks
-                            </Button>
-                        </Link>
-                    </div>
+                <div className="flex-1 p-8 flex flex-col items-center justify-center">
+                    <h2 className="text-2xl font-bold mb-4">Error</h2>
+                    <p className="text-muted-foreground">{error || "Task not found"}</p>
                 </div>
             </div>
         )
@@ -119,96 +70,9 @@ export default function EditTaskPage({ params }: { params: { id: string } }) {
     return (
         <div className="flex min-h-screen flex-col">
             <MainNav />
-            <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
-                <div className="flex items-center">
-                    <Link href={`/tasks/${params.id}`} className="mr-4">
-                        <Button variant="ghost" size="icon">
-                            <ArrowLeft className="h-4 w-4" />
-                        </Button>
-                    </Link>
-                    <h2 className="text-3xl font-bold tracking-tight">Edit Task</h2>
-                </div>
-
-                <Card className="max-w-2xl mx-auto">
-                    <CardHeader>
-                        <CardTitle>Task Details</CardTitle>
-                        <CardDescription>Update the details for your task</CardDescription>
-                    </CardHeader>
-                    <form onSubmit={handleSubmit}>
-                        <CardContent className="space-y-4">
-                            {error && (
-                                <Alert variant="destructive">
-                                    <AlertDescription>{error}</AlertDescription>
-                                </Alert>
-                            )}
-                            <div className="space-y-2">
-                                <Label htmlFor="title">Task Title</Label>
-                                <Input id="title" name="title" value={formData.title} onChange={handleChange} required />
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="description">Description</Label>
-                                <Textarea
-                                    id="description"
-                                    name="description"
-                                    value={formData.description}
-                                    onChange={handleChange}
-                                    rows={4}
-                                    required
-                                />
-                            </div>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div className="space-y-2">
-                                    <Label htmlFor="priority">Priority</Label>
-                                    <Select value={formData.priority} onValueChange={(value) => handleSelectChange("priority", value)}>
-                                        <SelectTrigger id="priority">
-                                            <SelectValue placeholder="Select priority" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="low">Low</SelectItem>
-                                            <SelectItem value="medium">Medium</SelectItem>
-                                            <SelectItem value="high">High</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                                <div className="space-y-2">
-                                    <Label htmlFor="status">Status</Label>
-                                    <Select value={formData.status} onValueChange={(value) => handleSelectChange("Status", value)}>
-                                        <SelectTrigger id="Status">
-                                            <SelectValue placeholder="Select status" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="pending">Pending</SelectItem>
-                                            <SelectItem value="in progress">In progress</SelectItem>
-                                            <SelectItem value="done">Done</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                                <div className="space-y-2">
-                                    <Label htmlFor="dueDate">Due Date</Label>
-                                    <Input
-                                        id="dueDate"
-                                        name="dueDate"
-                                        type="date"
-                                        value={formData.due_date}
-                                        onChange={handleChange}
-                                        required
-                                    />
-                                </div>
-                            </div>
-                        </CardContent>
-                        <CardFooter className="flex justify-between">
-                            <Link href={`/tasks/${params.id}`}>
-                                <Button variant="outline" type="button">
-                                    Cancel
-                                </Button>
-                            </Link>
-                            <Button type="submit" disabled={isSaving}>
-                                {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                                {isSaving ? "Saving..." : "Save Changes"}
-                            </Button>
-                        </CardFooter>
-                    </form>
-                </Card>
+            <div className="flex-1 container mx-auto p-4 md:p-8">
+                <h1 className="text-3xl font-bold mb-6">Edit Task</h1>
+                <TaskForm task={task} isEditing={true} />
             </div>
         </div>
     )
