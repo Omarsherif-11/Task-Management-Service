@@ -19,7 +19,7 @@ export default function EditTaskPage() {
     const taskId = params.id as string
 
 
-    if (isAuthenticated || !authLoading) {
+    if (authLoading || !isAuthenticated) {
         return null
     }
 
