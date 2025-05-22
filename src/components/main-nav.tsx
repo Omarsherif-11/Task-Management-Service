@@ -24,7 +24,7 @@ export function MainNav() {
 
     const handleSignOut = () => {
         //auth.removeUser()
-        auth.signinPopup()
+        auth.signoutPopup()
         router.push('/')
     }
 
