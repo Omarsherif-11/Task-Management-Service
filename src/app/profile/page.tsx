@@ -43,10 +43,10 @@ export default function ProfilePage() {
                                 <Label>Email</Label>
                                 <div className="p-2 border rounded-md bg-muted">{auth.user?.profile.email}</div>
                             </div>
-                            {/* <div className="space-y-2">
-                                <Label>Name</Label>
-                                <div className="p-2 border rounded-md bg-muted">{auth.user?.profile.name || "Not provided"}</div>
-                            </div> */}
+                            <div className="space-y-2">
+                                <Label>Phone Number</Label>
+                                <div className="p-2 border rounded-md bg-muted">{auth.user?.profile.phone_number || "Not provided"}</div>
+                            </div>
                         </CardContent>
                         <CardFooter>
                             <Button variant="destructive" onClick={handleSignOut}>
