@@ -12,7 +12,7 @@ export function LandingPage() {
     }
 
     const handleGetStarted = () => {
-        if (auth.isAuthenticated) {
+        if (auth.isAuthenticated && !auth.isLoading) {
             router.push("/dashboard")
         } else {
             auth.signinRedirect()
@@ -24,12 +24,6 @@ export function LandingPage() {
             <header className="bg-white border-b">
                 <div className="container mx-auto px-4 py-4 flex justify-between items-center">
                     <h1 className="text-2xl font-bold text-primary">Task Manager</h1>
-                    <div className="space-x-4">
-                        <Button variant="outline" onClick={() => auth.signinRedirect()}>
-                            Log In
-                        </Button>
-                        <Button onClick={handleSignUp}>Sign Up</Button>
-                    </div>
                 </div>
             </header>
             <main className="flex-1">

@@ -1,29 +1,24 @@
 "use client"
 
-import { useState } from "react"
 import { useAuth } from "react-oidc-context"
 import { useRouter } from "next/navigation"
 import { MainNav } from "@/components/main-nav"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Alert, AlertDescription } from "@/components/ui/alert"
 
 export default function ProfilePage() {
     const auth = useAuth()
     const router = useRouter()
-    const [success, setSuccess] = useState("")
-    const [error, setError] = useState("")
 
-    const handleSignOut = () => {
-        auth.removeUser()
-        auth.signoutRedirect()
-        router.push("/")
+    if (auth.isLoading || !auth.isAuthenticated) {
+        return null
     }
 
-    if (!auth.isAuthenticated) {
-        router.push("/")
-        return null
+    const handleSignOut = () => {
+        //auth.removeUser()
+        auth.signoutRedirect()
+        //router.push('/')
     }
 
     return (

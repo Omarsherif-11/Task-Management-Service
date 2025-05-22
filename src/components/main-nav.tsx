@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { useAuth } from 'react-oidc-context';
@@ -17,8 +17,22 @@ import { User, LogOut, Menu, X } from "lucide-react"
 import { useState } from "react"
 
 export function MainNav() {
+
+    const { user } = useAuth()
+    const router = useRouter()
+    const auth = useAuth();
+
+    const handleSignOut = () => {
+        //auth.removeUser()
+        auth.signoutRedirect().then(() => {
+            router.push('/')
+        }).catch((error) => {
+            console.error(error)
+            router.push('/')
+        })
+    }
+
     const pathname = usePathname()
-    const {user} = useAuth()
     const [isMenuOpen, setIsMenuOpen] = useState(false)
 
     const routes = [
@@ -72,14 +86,14 @@ export function MainNav() {
                             <DropdownMenuContent className="w-56" align="end" forceMount>
                                 <DropdownMenuLabel className="font-normal">
                                     <div className="flex flex-col space-y-1">
-                                        <p className="text-sm font-medium leading-none">{user.email}</p>
+                                        <p className="text-sm font-medium leading-none">{user.profile.email}</p>
                                     </div>
                                 </DropdownMenuLabel>
                                 <DropdownMenuSeparator />
                                 <DropdownMenuItem asChild>
                                     <Link href="/profile">Profile</Link>
                                 </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => signOut()}>
+                                <DropdownMenuItem onClick={() => handleSignOut()}>
                                     <LogOut className="mr-2 h-4 w-4" />
                                     <span>Log out</span>
                                 </DropdownMenuItem>
@@ -107,7 +121,7 @@ export function MainNav() {
                                 {route.label}
                             </Link>
                         ))}
-                        <Button variant="outline" onClick={() => signOut()} className="justify-start">
+                        <Button variant="outline" onClick={() => handleSignOut()} className="justify-start">
                             <LogOut className="mr-2 h-4 w-4" />
                             <span>Log out</span>
                         </Button>

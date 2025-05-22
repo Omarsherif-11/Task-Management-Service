@@ -1,13 +1,16 @@
 'use client'
-import { useAuth } from 'react-oidc-context';
+
 import { MainNav } from "@/components/main-nav"
 import { DashboardContent } from "@/components/dashboard-content"
+import { useAuth } from "react-oidc-context"
 
 export default function DashboardPage() {
-    // Ensure user is authenticated
-    const auth = useAuth()
-    // Get current user
-    const user = auth.user;
+
+    const { isLoading, isAuthenticated } = useAuth()
+
+    if (isLoading || !isAuthenticated) {
+        return null
+    }
 
     return (
         <div className="flex min-h-screen flex-col">

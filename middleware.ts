@@ -6,19 +6,14 @@ export function middleware(request: NextRequest) {
     const path = request.nextUrl.pathname
 
     // Public paths that don't require authentication
-    const publicPaths = ["/", "/login", "/signup"]
+    const publicPaths = ["/", "/callback"]
 
     // Check if the path is public
     const isPublicPath = publicPaths.some((publicPath) => path === publicPath)
 
-    // If the path is not public and there's no auth cookie, redirect to login
+    // If the path is not public and there's no auth cookie, redirect to home
     if (!isPublicPath && !authCookie) {
-        return NextResponse.redirect(new URL("/login", request.url))
-    }
-
-    // If the path is public and there's an auth cookie, redirect to dashboard
-    if (isPublicPath && path !== "/" && authCookie) {
-        return NextResponse.redirect(new URL("/dashboard", request.url))
+        return NextResponse.redirect(new URL("/", request.url))
     }
 
     return NextResponse.next()

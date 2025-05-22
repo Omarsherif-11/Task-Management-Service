@@ -11,6 +11,7 @@ import { fetchTasks } from "@/lib/api"
 import type { Task } from "@/types/task"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { TaskCard } from "@/components/task-card"
+import { useRouter } from "next/navigation"
 
 export default function TasksPage() {
     const [tasks, setTasks] = useState<Task[]>([])
@@ -20,7 +21,11 @@ export default function TasksPage() {
     const [priorityFilter, setPriorityFilter] = useState("all")
     const [statusFilter, setStatusFilter] = useState("all")
 
-    const { user } = useAuth();
+    const { user, isLoading: authLoading, isAuthenticated } = useAuth()
+
+    if (authLoading || !isAuthenticated) {
+        return null
+    }
 
     useEffect(() => {
         const loadTasks = async () => {

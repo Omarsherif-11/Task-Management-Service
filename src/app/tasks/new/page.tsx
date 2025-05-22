@@ -3,20 +3,12 @@
 import { MainNav } from "@/components/main-nav"
 import { TaskForm } from "@/components/task-form"
 import { useAuth } from "react-oidc-context"
-import { useRouter } from "next/navigation"
-import { useEffect } from "react"
 
 export default function NewTaskPage() {
-    const { user, isLoading } = useAuth()
-    const router = useRouter()
 
-    useEffect(() => {
-        if (!isLoading && !user) {
-            router.push("/")
-        }
-    }, [user, isLoading, router])
+    const { isAuthenticated, isLoading } = useAuth()
 
-    if (isLoading || !user) {
+    if (isLoading || !isAuthenticated) {
         return null
     }
 

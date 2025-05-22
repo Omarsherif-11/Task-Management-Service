@@ -27,14 +27,21 @@ import type { Task } from "@/types/task"
 export default function TaskDetailPage() {
     const params = useParams()
     const router = useRouter()
-    const { user } = useAuth()
+    const { user, isLoading: authLoading } = useAuth()
     const [task, setTask] = useState<Task | null>(null)
     const [isLoading, setIsLoading] = useState(true)
     const [error, setError] = useState("")
     const [isDeleting, setIsDeleting] = useState(false)
     const taskId = params.id as string
 
+    const { isAuthenticated } = useAuth()
+
+    if (authLoading || !isAuthenticated) {
+        return null
+    }
+
     useEffect(() => {
+
         const loadTask = async () => {
             try {
                 if (user) {
