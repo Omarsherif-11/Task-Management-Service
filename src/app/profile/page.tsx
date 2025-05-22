@@ -17,8 +17,8 @@ export default function ProfilePage() {
 
     const handleSignOut = () => {
         //auth.removeUser()
-        auth.signoutRedirect()
-        //router.push('/')
+        auth.signoutPopup()
+        router.push('/')
     }
 
     return (

@@ -24,12 +24,8 @@ export function MainNav() {
 
     const handleSignOut = () => {
         //auth.removeUser()
-        auth.signoutRedirect().then(() => {
-            router.push('/')
-        }).catch((error) => {
-            console.error(error)
-            router.push('/')
-        })
+        auth.signinPopup()
+        router.push('/')
     }
 
     const pathname = usePathname()
